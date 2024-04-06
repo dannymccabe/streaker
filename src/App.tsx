@@ -4,12 +4,16 @@ import './App.css';
 const App: React.FC = () => {
   const [habit, setHabit] = useState<string>('');
   const [daysStreak, setDaysStreak] = useState<number>(0);
+  const [lastUpdateDate, setLastUpdateDate] = useState<string>('');
 
   useEffect(() => {
     const savedHabit = localStorage.getItem('habit');
     const savedDaysStreak = localStorage.getItem('daysStreak');
+    const savedLastUpdateDate = localStorage.getItem('lastUpdateDate');
+
     if (savedHabit) setHabit(savedHabit);
     if (savedDaysStreak) setDaysStreak(parseInt(savedDaysStreak));
+    if (savedLastUpdateDate) setLastUpdateDate(savedLastUpdateDate);
   }, []);
 
   const handleHabitChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -18,21 +22,35 @@ const App: React.FC = () => {
   };
 
   const handleConfirmation = () => {
-    setDaysStreak((prev) => prev + 1);
-    localStorage.setItem('daysStreak', (daysStreak + 1).toString());
-    // Add notification functionality here
-    const showNotification = () => {
-      chrome.notifications.create('reminder', {
-        type: 'basic',
-        iconUrl: 'icon.png', // Provide your icon path
-        title: 'Streaker Reminder',
-        message: 'Did you stick to your habit today?',
-        buttons: [{ title: 'Yes' }, { title: 'Not today' }],
-      });
-    };
+    const today = new Date().toLocaleDateString();
+    if (today !== lastUpdateDate) {
+      setDaysStreak((prev) => prev + 1);
+      setLastUpdateDate(today);
+      localStorage.setItem('daysStreak', (daysStreak + 1).toString());
+      localStorage.setItem('lastUpdateDate', today);
+    }
+  };
 
-    // Call this function to show daily reminders
-    showNotification();
+  // Function to render calendar dates
+  const renderCalendar = () => {
+    const dates = []; // Array to store JSX elements for calendar dates
+    for (let i = 1; i <= 30; i++) {
+      // Assuming 30 days in a month
+      const date = new Date();
+      date.setDate(date.getDate() - i + 1);
+      const formattedDate = date.toLocaleDateString();
+      const isSuccessful = formattedDate === lastUpdateDate;
+
+      dates.push(
+        <div
+          key={formattedDate}
+          className={`calendar-date ${isSuccessful ? 'successful' : ''}`}
+        >
+          {formattedDate}
+        </div>
+      );
+    }
+    return dates;
   };
 
   return (
@@ -52,6 +70,7 @@ const App: React.FC = () => {
         <h3>Current Streak:</h3>
         <p>{daysStreak} days</p>
       </div>
+      <div className="calendar">{renderCalendar()}</div>
     </>
   );
 };

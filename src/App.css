@@ -40,3 +40,18 @@
 .read-the-docs {
   color: #888;
 }
+
+.calendar-date {
+  display: inline-block;
+  margin: 2px;
+  padding: 5px;
+  border: 1px solid #ccc;
+}
+
+.successful {
+  background-color: green;
+}
+
+.unsuccessful {
+  background-color: red;
+}
