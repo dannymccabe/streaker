@@ -1,10 +1,10 @@
 {
   "manifest_version": 3,
   "version": "1.0.0",
-  "name": "colour picker extension",
+  "name": "Streaker",
   "action": {
     "default_popup": "index.html"
   },
-  "permissions": ["scripting"],
+  "permissions": ["storage", "notifications", "scripting"],
   "host_permissions": ["http://*/*", "https://*/*"]
 }
