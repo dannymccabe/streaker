@@ -2,6 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
 import Calendar from './components/Calendar';
+import SetGoal from './components/SetGoal';
+import TodayPrompt from './components/TodayPrompt';
 
 const App: React.FC = () => {
   const [habit, setHabit] = useState<string>('');
@@ -54,58 +56,76 @@ const App: React.FC = () => {
     setCalendarStatus({});
   };
 
-  const handleSuccess = (date: string) => {
-    const updatedStatus = { ...calendarStatus, [date]: true };
-    setCalendarStatus(updatedStatus);
-    localStorage.setItem('calendarStatus', JSON.stringify(updatedStatus));
+  const handleSuccess = () => {
+    const today = new Date().toLocaleDateString();
+    setCalendarStatus({ ...calendarStatus, [today]: true });
+    setDaysStreak((prev) => prev + 1);
+    localStorage.setItem(
+      'calendarStatus',
+      JSON.stringify({ ...calendarStatus, [today]: true })
+    );
+    localStorage.setItem('daysStreak', (daysStreak + 1).toString());
   };
 
-  const handleFailure = (date: string) => {
-    // Reset streak and mark day as failed
+  const handleFailure = () => {
+    const today = new Date().toLocaleDateString();
+    setCalendarStatus({ ...calendarStatus, [today]: false });
     setDaysStreak(0);
-    const updatedStatus = { ...calendarStatus, [date]: false };
-    setCalendarStatus(updatedStatus);
+    localStorage.setItem(
+      'calendarStatus',
+      JSON.stringify({ ...calendarStatus, [today]: false })
+    );
     localStorage.setItem('daysStreak', '0');
-    localStorage.setItem('calendarStatus', JSON.stringify(updatedStatus));
   };
 
-  const renderGoal = () => {
-    if (goalEntered) {
-      return <h2>{habit}</h2>;
-    } else {
+  const renderContent = () => {
+    if (!goalEntered) {
       return (
-        <input
-          type="text"
-          placeholder="Enter your goal"
-          value={habit}
-          onChange={handleHabitChange}
+        <SetGoal
+          habit={habit}
+          handleHabitChange={handleHabitChange}
+          handleConfirmation={handleConfirmation}
+          goalEntered={goalEntered}
         />
       );
+    } else {
+      const today = new Date().toLocaleDateString();
+      if (calendarStatus[today] === undefined) {
+        return (
+          <TodayPrompt
+            habit={habit}
+            handleSuccess={handleSuccess}
+            handleFailure={handleFailure}
+          />
+        );
+      } else {
+        return (
+          <>
+            <div className="streak">
+              <h3>Current Streak:</h3>
+              <p>{daysStreak} days</p>
+            </div>
+            <Calendar
+              lastUpdateDate={lastUpdateDate}
+              calendarStatus={calendarStatus}
+              handleSuccess={function (date: string): void {
+                throw new Error('Function not implemented.');
+              }}
+              handleFailure={function (date: string): void {
+                throw new Error('Function not implemented.');
+              }}
+            />
+            <button onClick={handleReset}>Reset</button>
+          </>
+        );
+      }
     }
   };
 
   return (
     <>
       <h1>Streaker 🏃💨</h1>
-      <div className="card">
-        {renderGoal()}
-        {!goalEntered && <button onClick={handleConfirmation}>Confirm</button>}
-      </div>
-      {goalEntered && (
-        <>
-          <div className="streak">
-            <h3>Current Streak:</h3>
-            <p>{daysStreak} days</p>
-          </div>
-          <Calendar
-            lastUpdateDate={lastUpdateDate}
-            calendarStatus={calendarStatus}
-            handleSuccess={handleSuccess}
-            handleFailure={handleFailure}
-          />
-          <button onClick={handleReset}>Reset</button>
-        </>
-      )}
+      <div className="card">{renderContent()}</div>
     </>
   );
 };
